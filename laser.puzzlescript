@@ -287,6 +287,11 @@ LEGEND
 # = Wall
 & = LaserWall
 P = Player
+* = Goal
+? = StartActivated
+
+$ = DoorClosed
+@ = AntiDoorOpen
 
 8 = GunUp
 2 = GunDown
@@ -303,11 +308,6 @@ k = TargetDown
 l = TargetRight
 j = TargetLeft
 
-$ = DoorClosed
-@ = AntiDoorOpen
-* = Goal
-
-? = StartActivated
 
 SwitchOn = SwitchUpOn or SwitchDownOn or SwitchRightOn or SwitchLeftOn
 SwitchOff = SwitchUpOff or SwitchDownOff or SwitchRightOff or SwitchLeftOff
@@ -355,9 +355,11 @@ Switch
 RULES
 ======
 
-(door blocks player)
-(can't do this with collisionlayers otherwise door closing onto player would kill you)
+(player can't move if stuck inside closed door)
 [ > Player DoorClosed ] -> [ Player DoorClosed ]
+[ > Player AntiDoorClosed ] -> [ Player AntiDoorClosed ]
+
+(player can't move into closed door)
 [ > Player | DoorClosed ] -> [ Player | DoorClosed ]
 [ > Player | AntiDoorClosed ] -> [ Player | AntiDoorClosed ]
 
@@ -372,7 +374,7 @@ RULES
 [ > Player | SwitchRightOn ] -> [ | Player SwitchRightOff ]
 [ > Player | SwitchLeftOn ] -> [ | Player SwitchLeftOff ]
 
-(set up GunShadow. these will be used to determine whether to play laser sfx or switch sfx)
+(set up GunShadow. these will be used to determine whether to play laser sfx)
 [ GunShadow ] -> []
 [ Gun Laser ] -> [ Gun Laser GunShadow ]
 
@@ -387,6 +389,7 @@ RULES
 [ LaserRight TargetLeft ] -> [ LaserRight TargetLeft Activated ]
 [ LaserLeft TargetRight ] -> [ LaserLeft TargetRight Activated ]
 
+(clear old lasers)
 [ Laser ] -> []
 
 (guns create lasers)
@@ -442,7 +445,6 @@ all Player on Goal
 =======
 LEVELS
 =======
-
 MESSAGE Level 1 of 4
 MESSAGE Laser
 
@@ -480,17 +482,16 @@ MESSAGE Laser
 
 MESSAGE Level 4 of 4
 MESSAGE Laser
-l&&&@4l&&4k
-2*..k.2...&
-&.........&
-&.........&
-i6........&
-2.........8
-&........4k
-&.........&
-&.p.......&
-&?..8.....8
-i6&&j6&&&&j
-
+..@.*.k6j.
+..l&4l&&4k
+.k2..2...&
+.8&......8
+.l&.....4k
+..i6.....&
+..2.....p&
+..&?..8..8
+..i6.&j6&j
+....@i....
+....l4....
 
 MESSAGE LASER
