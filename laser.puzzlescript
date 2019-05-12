@@ -357,8 +357,6 @@ RULES
 [ > Player | SwitchRightOn ] -> [ | Player SwitchRightOff ]
 [ > Player | SwitchLeftOn ] -> [ | Player SwitchLeftOff ]
 
-[ DoorOpen ] -> [ DoorClosed ]
-[ NotDoorClosed ] -> [ NotDoorOpen ]
 [ Activated ] -> []
 
 [ LaserUp TargetDown ] -> [ LaserUp TargetDown Activated ]
@@ -368,20 +366,13 @@ RULES
 
 [ Laser ] -> []
 
+(guns)
 [ SwitchOn | GunUp ] -> [ SwitchOn | GunUp LaserUp ]
 [ SwitchOn | GunDown ] -> [ SwitchOn | GunDown LaserDown ]
 [ SwitchOn | GunRight ] -> [ SwitchOn | GunRight LaserRight ]
 [ SwitchOn | GunLeft ] -> [ SwitchOn | GunLeft LaserLeft ]
 
-( Doors should open/close before moving lasers so that they block lasers )
-late [ LaserUp TargetDown ] -> [ LaserUp TargetDown Activated ]
-late [ LaserDown TargetUp ] -> [ LaserDown TargetUp Activated ]
-late [ LaserRight TargetLeft ] -> [ LaserRight TargetLeft Activated ]
-late [ LaserLeft TargetRight ] -> [ LaserLeft TargetRight Activated ]
-
-late [ Activated | DoorClosed ] -> [ Activated | DoorOpen ]
-late [ Activated | NotDoorOpen ] -> [ Activated | NotDoorClosed ]
-
+(lasers)
 late up [ LaserUp no Target | no LaserUp no BlockedLaserUp ] -> [ LaserUp | LaserUp ]
 + late up [ LaserUp BlockLaser ] -> [ BlockedLaserUp BlockLaser ]
 
@@ -394,18 +385,17 @@ late right [ LaserRight no Target | no LaserRight no BlockedLaserRight ] -> [ La
 late left [ LaserLeft no Target | no LaserLeft no BlockedLaserLeft ] -> [ LaserLeft | LaserLeft ]
 + late left [ LaserLeft BlockLaser ] -> [ BlockedLaserLeft BlockLaser ]
 
-( Then another round of doors once lasers have gone )
-late [ DoorOpen ] -> [ DoorClosed ]
-late [ NotDoorClosed ] -> [ NotDoorOpen ]
-late [ Activated ] -> []
-
+( doors)
 late [ LaserUp TargetDown ] -> [ LaserUp TargetDown Activated ]
 late [ LaserDown TargetUp ] -> [ LaserDown TargetUp Activated ]
 late [ LaserRight TargetLeft ] -> [ LaserRight TargetLeft Activated ]
 late [ LaserLeft TargetRight ] -> [ LaserLeft TargetRight Activated ]
 
+late [ DoorOpen ] -> [ DoorClosed ]
+late [ NotDoorClosed ] -> [ NotDoorOpen ]
 late [ Activated | DoorClosed ] -> [ Activated | DoorOpen ]
 late [ Activated | NotDoorOpen ] -> [ Activated | NotDoorClosed ]
+
 
 ==============
 WINCONDITIONS
@@ -417,6 +407,17 @@ all Player on Goal
 =======
 LEVELS
 =======
+
+
+#########
+#.......#
+#$...k$.#
+#l...@.4#
+#.....8a#
+#...w8wp#
+#.......#
+#########
+
 
 
 ########
