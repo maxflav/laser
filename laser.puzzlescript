@@ -21,7 +21,7 @@ grey
 00.00
 
 Player
-grey #222 red
+#678 #222 red
 .101.
 .020.
 ..0..
@@ -245,7 +245,7 @@ DoorOpen
 00000
 
 
-NotDoorOpen
+AntiDoorOpen
 grey
 00000
 0...0
@@ -253,7 +253,7 @@ grey
 0...0
 00000
 
-NotDoorClosed
+AntiDoorClosed
 #eee grey
 11111
 10001
@@ -273,7 +273,11 @@ yellow
 Activated
 Transparent
 
+StartActivated
+Transparent
 
+GunShadow
+Transparent
 
 =======
 LEGEND
@@ -300,8 +304,10 @@ l = TargetRight
 j = TargetLeft
 
 $ = DoorClosed
-@ = NotDoorOpen
+@ = AntiDoorOpen
 * = Goal
+
+? = StartActivated
 
 SwitchOn = SwitchUpOn or SwitchDownOn or SwitchRightOn or SwitchLeftOn
 SwitchOff = SwitchUpOff or SwitchDownOff or SwitchRightOff or SwitchLeftOff
@@ -311,16 +317,19 @@ BlockedLaser = BlockedLaserUp or BlockedLaserDown or BlockedLaserRight or Blocke
 Laser = LaserUp or LaserDown or LaserRight or LaserLeft or BlockedLaser
 Gun = GunUp or GunDown or GunRight or GunLeft
 Target = TargetUp or TargetDown or TargetRight or TargetLeft
-Door = DoorClosed or DoorOpen or NotDoorClosed or NotDoorOpen
+Door = DoorClosed or DoorOpen or AntiDoorClosed or AntiDoorOpen
 
-BlockLaser = Wall or Player or Gun or DoorClosed or NotDoorClosed
+BlockLaser = Wall or Player or Gun or DoorClosed or AntiDoorClosed
 
 =========
 SOUNDS
 =========
-SwitchOn create 14137301
+sfx0 14137301
+sfx1 29885504
+SwitchOn create 84213107
 SwitchOff create 84213107
-( sfx0 36850100 )
+EndLevel 3301903
+
 
 ================
 COLLISIONLAYERS
@@ -328,6 +337,8 @@ COLLISIONLAYERS
 
 Background
 Goal, Activated
+StartActivated
+GunShadow
 LaserUp
 LaserDown
 LaserRight
@@ -336,8 +347,9 @@ BlockedLaserUp
 BlockedLaserDown
 BlockedLaserRight
 BlockedLaserLeft
+Door
 Player, Wall, LaserWall, Gun, Target
-Switch, Door
+Switch
 
 ======
 RULES
@@ -345,10 +357,11 @@ RULES
 
 (door blocks player)
 (can't do this with collisionlayers otherwise door closing onto player would kill you)
+[ > Player DoorClosed ] -> [ Player DoorClosed ]
 [ > Player | DoorClosed ] -> [ Player | DoorClosed ]
-[ > Player | NotDoorClosed ] -> [ Player | NotDoorClosed ]
+[ > Player | AntiDoorClosed ] -> [ Player | AntiDoorClosed ]
 
-(switches)
+(player flips switch)
 [ > Player | SwitchUpOff ] -> [ | Player SwitchUpOn ]
 [ > Player | SwitchDownOff ] -> [ | Player SwitchDownOn ]
 [ > Player | SwitchRightOff ] -> [ | Player SwitchRightOn ]
@@ -359,13 +372,31 @@ RULES
 [ > Player | SwitchRightOn ] -> [ | Player SwitchRightOff ]
 [ > Player | SwitchLeftOn ] -> [ | Player SwitchLeftOff ]
 
+(set up GunShadow. these will be used to determine whether to play laser sfx or switch sfx)
+[ GunShadow ] -> []
+[ Gun Laser ] -> [ Gun Laser GunShadow ]
+
+(switches activate)
+[ Activated ] -> []
+[ StartActivated ] -> [ Activated ]
+[ SwitchOn ] -> [ SwitchOn Activated ]
+
+(targets activate)
+[ LaserUp TargetDown ] -> [ LaserUp TargetDown Activated ]
+[ LaserDown TargetUp ] -> [ LaserDown TargetUp Activated ]
+[ LaserRight TargetLeft ] -> [ LaserRight TargetLeft Activated ]
+[ LaserLeft TargetRight ] -> [ LaserLeft TargetRight Activated ]
+
 [ Laser ] -> []
 
 (guns create lasers)
-[ SwitchOn | GunUp ] -> [ SwitchOn | GunUp LaserUp ]
-[ SwitchOn | GunDown ] -> [ SwitchOn | GunDown LaserDown ]
-[ SwitchOn | GunRight ] -> [ SwitchOn | GunRight LaserRight ]
-[ SwitchOn | GunLeft ] -> [ SwitchOn | GunLeft LaserLeft ]
+[ Activated | GunUp ] -> [ Activated | GunUp LaserUp ]
+[ Activated | GunDown ] -> [ Activated | GunDown LaserDown ]
+[ Activated | GunRight ] -> [ Activated | GunRight LaserRight ]
+[ Activated | GunLeft ] -> [ Activated | GunLeft LaserLeft ]
+
+(maybe play laser sfx)
+[ Gun Laser no GunShadow ] -> sfx0
 
 (after this is 'late' because lasers depend on player's position after moving)
 
@@ -382,8 +413,12 @@ late right [ LaserRight no Target | no LaserRight no BlockedLaserRight ] -> [ La
 late left [ LaserLeft no Target | no LaserLeft no BlockedLaserLeft ] -> [ LaserLeft | LaserLeft ]
 + late left [ LaserLeft BlockLaser ] -> [ BlockedLaserLeft BlockLaser ]
 
-(targets activate)
+(Laser on Player sfx1)
+late [ Player Laser ] -> sfx1
+
+(switches & targets activate)
 [ Activated ] -> []
+[ SwitchOn ] -> [ SwitchOn Activated ]
 late [ LaserUp TargetDown ] -> [ LaserUp TargetDown Activated ]
 late [ LaserDown TargetUp ] -> [ LaserDown TargetUp Activated ]
 late [ LaserRight TargetLeft ] -> [ LaserRight TargetLeft Activated ]
@@ -391,10 +426,9 @@ late [ LaserLeft TargetRight ] -> [ LaserLeft TargetRight Activated ]
 
 (doors)
 late [ DoorOpen ] -> [ DoorClosed ]
-late [ NotDoorClosed ] -> [ NotDoorOpen ]
+late [ AntiDoorClosed ] -> [ AntiDoorOpen ]
 late [ Activated | DoorClosed ] -> [ Activated | DoorOpen ]
-late [ Activated | NotDoorOpen ] -> [ Activated | NotDoorClosed ]
-
+late [ Activated | AntiDoorOpen ] -> [ Activated | AntiDoorClosed ]
 
 
 ==============
@@ -409,31 +443,54 @@ all Player on Goal
 LEVELS
 =======
 
+MESSAGE Level 1 of 4
+MESSAGE Laser
 
-#########
-#.......#
-#$...k$.#
-#l...@*4#
-#.....8a#
-#...w8wp#
-#.......#
-#########
+....######
+#####...*#
+#...#.####
+#.#$k@...#
+#.#..###.#
+#a6....j$#
+#.#w8..p.#
+##########
 
-
-
-########
-#*.$.p.#
-###k##.#
-#......#
-#.w8...#
-########
-
+MESSAGE Level 2 of 4
+MESSAGE Laser
 
 ###########
 #.$.......#
 #.l$...4#.#
 #*#k@..a#.#
-###..#...$#
-#6s..&...j#
-#.w8##.p..#
+###..#..#.#
+#6s..&..j$#
+##w8##.p..#
 ###########
+
+MESSAGE Level 3 of 4
+MESSAGE Laser
+###########
+#p.wwwww..#
+#..22222..#
+#.........#
+#..@@@@@..#
+#..iiiii###
+#..$$@$$.*#
+###########
+
+MESSAGE Level 4 of 4
+MESSAGE Laser
+l&&&@4l&&4k
+2*..k.2...&
+&.........&
+&.........&
+i6........&
+2.........8
+&........4k
+&.........&
+&.p.......&
+&?..8.....8
+i6&&j6&&&&j
+
+
+MESSAGE LASER
