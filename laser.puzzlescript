@@ -1,10 +1,25 @@
 title Laser
 author Max
 noaction
+run_rules_on_level_start (for StartActivated)
 
 ========
 OBJECTS
 ========
+
+Activated
+Transparent
+
+StartActivated
+green
+00000
+00000
+00000
+00000
+00000
+
+GunShadow
+Transparent
 
 Background
 black
@@ -270,15 +285,6 @@ yellow
 .....
 
 
-Activated
-Transparent
-
-StartActivated
-Transparent
-
-GunShadow
-Transparent
-
 =======
 LEGEND
 =======
@@ -445,6 +451,7 @@ all Player on Goal
 =======
 LEVELS
 =======
+
 MESSAGE Level 1 of 4
 MESSAGE Laser
 
@@ -488,10 +495,11 @@ MESSAGE Laser
 .8&......8
 .l&.....4k
 ..i6.....&
-..2.....p&
+..2....p.&
 ..&?..8..8
 ..i6.&j6&j
 ....@i....
 ....l4....
+
 
 MESSAGE LASER
